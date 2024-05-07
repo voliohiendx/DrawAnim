@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="White_FF">#FFFFFF</color>
+    <color name="Primary_Mint">#00FFC2</color>
+    <color name="Black_20">#202020</color>
+    <color name="White_Alpha_10">#1AFFFFFF</color>
+    <color name="White_E1_normal">#E1E1E1</color>
+    <color name="Grey_Dark_56">#565656</color>
+</resources>

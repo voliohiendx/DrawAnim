@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.volio.project.com.volio.project.ui.splash.SplashFragment">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.volio.vn.b1_project.ui.splash.SplashViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#9F5656">
+
+<!--       <com.volio.vn.data.models.DrawView-->
+<!--           android:layout_width="match_parent"-->
+<!--           android:layout_height="0dp"-->
+<!--           app:layout_constraintDimensionRatio="1:1"-->
+<!--           android:background="@color/white" />-->
+
+
+        <com.volio.draw.draw.DrawView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintDimensionRatio="1:1"
+            android:background="@color/white"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
