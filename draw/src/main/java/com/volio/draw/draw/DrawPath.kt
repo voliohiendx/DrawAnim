@@ -6,7 +6,9 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Point
 import android.view.MotionEvent
+import com.volio.draw.model.DrawPathModel
 import com.volio.draw.model.DrawPoint
+import com.volio.draw.model.DrawStickerModel
 import com.volio.draw.model.PathDrawData
 
 class DrawPath(
@@ -25,19 +27,27 @@ class DrawPath(
         drawPathDefault(canvas, data)
     }
 
-    fun onActionDown(event: MotionEvent){
+    fun onActionDown(event: MotionEvent) {
         listDrawPoint = mutableListOf()
     }
 
-    fun onActionMove(event: MotionEvent){
+    fun onActionMove(event: MotionEvent) {
         listDrawPoint.add(DrawPoint(event.x, event.y))
         updatePath(data.path, listDrawPoint)
     }
 
-    fun onActionUp(event: MotionEvent){
+    fun onActionUp(event: MotionEvent, onUpdate: (DrawPathModel) -> Unit) {
+        onUpdate(
+            DrawPathModel(
+                System.currentTimeMillis(),
+                listDrawPoint,
+                data.size,
+                data.color,
+                data.brushType
+            )
+        )
 
     }
-
 
     private fun updatePath(path: Path, listPoint: List<DrawPoint>) {
         path.reset()

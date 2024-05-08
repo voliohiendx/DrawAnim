@@ -8,4 +8,8 @@ data class PathDrawData(
     var size: Float,
     var color: Int,
     var brushType: Int
-)
+) {
+    fun copy(): PathDrawData {
+        return PathDrawData(System.currentTimeMillis(), Path(), size, color, brushType)
+    }
+}

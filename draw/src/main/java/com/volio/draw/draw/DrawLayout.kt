@@ -16,20 +16,43 @@ import com.volio.draw.model.TypeDraw
 
 class DrawLayout(val context: Context, private val updateView: () -> Unit) : DrawCanvas {
 
-    var typeDraw: TypeDraw = TypeDraw.STICKER
+    private var typeDraw: TypeDraw = TypeDraw.BRUSH
 
-    val dataDraw = mutableListOf<DataDraw>()
+    private var dataDraw = mutableListOf<DataDraw>()
+    private val listUndo: ArrayDeque<DataDraw> = ArrayDeque()
+    private val listRedo: ArrayDeque<DataDraw> = ArrayDeque()
+
     private var listPath: MutableList<DrawPath> = mutableListOf()
     private var listSticker: MutableList<DrawSticker> = mutableListOf()
 
-    private var currentPath: DrawPath = DrawPath(PathDrawData(0, Path(), 10f, Color.BLACK, 0))
+    private var currentPath: PathDrawData =
+        PathDrawData(System.currentTimeMillis(), Path(), 10f, Color.BLACK, 0)
 
-    private var currentSticker: DrawSticker = DrawSticker(context, DrawStickerModel(System.currentTimeMillis(), "https://e0.pxfuel.com/wallpapers/353/461/desktop-wallpaper-luffy-g5-gomu-no-nika-monkey-akuma-gear.jpg", DrawPoint(0f, 0f), DrawPoint(0f, 0f)))
+    private var currentSticker: DrawStickerModel = DrawStickerModel(
+        System.currentTimeMillis(),
+        "https://png.pngtree.com/png-clipart/20231018/original/pngtree-cloud-cute-clouds-blue-sky-png-image_13356252.png",
+        DrawPoint(0f, 0f),
+        DrawPoint(0f, 0f)
+    )
 
+    private var drawPath: DrawPath? = DrawPath(currentPath.copy())
+
+    private var drawSticker: DrawSticker? = DrawSticker(
+        context,
+        currentSticker, {}
+    )
+
+    fun setData(dataDraw: List<DataDraw>) {
+        this.dataDraw = dataDraw.toMutableList()
+        updateAllSticker()
+        updateAllPath()
+        updateView.invoke()
+    }
+
+    fun getDataDraw(): List<DataDraw> = dataDraw
 
     @SuppressLint("DrawAllocation")
     override fun onDraw(canvas: Canvas) {
-
         dataDraw.forEachIndexed { index, data ->
             if (data is DrawPathModel) {
                 getListPathByData(data)?.onDraw(canvas)
@@ -39,61 +62,149 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
                 }
             }
         }
-        currentSticker.onDraw(canvas)
-        currentPath.onDraw(canvas)
+
+        drawSticker?.onDraw(canvas)
+        drawPath?.onDraw(canvas)
 
     }
 
     override fun onTouch(event: MotionEvent) {
         when (event.action) {
             MotionEvent.ACTION_UP -> {
-                if (typeDraw == TypeDraw.BRUSH) {
-                    dataDraw.add(DrawPathModel(System.currentTimeMillis(), currentPath.listDrawPoint, currentPath.data.size, currentPath.data.color, currentPath.data.brushType))
-                    updateAllPath()
-                } else if (typeDraw == TypeDraw.STICKER) {
-                    currentSticker.onActionUp(event) {
-                        dataDraw.add(it)
-                    }
-                    updateAllSticker()
-                }
+                actionUpBrushErase(event)
+                actionUpSticker(event)
             }
 
             MotionEvent.ACTION_MOVE -> {
-                if (typeDraw == TypeDraw.BRUSH) {
-                    currentPath.onActionMove(event)
-                } else {
-                    currentSticker.onActionMove(event)
-                }
+                actionMoveBrushErase(event)
+                actionMoveSticker(event)
             }
 
             MotionEvent.ACTION_DOWN -> {
-                if (typeDraw == TypeDraw.BRUSH) {
-                    currentPath.onActionDown(event)
-                } else {
-                    Log.d("HIIUIUIUIUI", "onTouch: ")
-                    currentSticker = DrawSticker(context, DrawStickerModel(System.currentTimeMillis(), "https://e0.pxfuel.com/wallpapers/353/461/desktop-wallpaper-luffy-g5-gomu-no-nika-monkey-akuma-gear.jpg", DrawPoint(0f, 0f), DrawPoint(0f, 0f)))
-
-                    currentSticker.onActionDown(event)
-                }
+                actionDownBrushErase(event)
+                actionDownSticker(event)
             }
         }
 
         updateView.invoke()
     }
 
-    override fun onUndo() {
+    private fun actionDownSticker(event: MotionEvent) {
+        if (typeDraw == TypeDraw.STICKER) {
+            drawSticker = DrawSticker(
+                context,
+                currentSticker.copy(), {
+                    updateView.invoke()
+                }
+            )
+            drawSticker?.onActionDown(event)
+        }
+    }
 
+    private fun actionDownBrushErase(event: MotionEvent) {
+        if (typeDraw == TypeDraw.BRUSH || typeDraw == TypeDraw.ERASE) {
+            drawPath = DrawPath(currentPath.copy())
+            drawPath?.onActionDown(event)
+        }
+    }
+
+    private fun actionMoveSticker(event: MotionEvent) {
+        if (typeDraw == TypeDraw.STICKER) {
+            drawSticker?.onActionMove(event)
+        }
+    }
+
+    private fun actionMoveBrushErase(event: MotionEvent) {
+        if (typeDraw == TypeDraw.BRUSH || typeDraw == TypeDraw.ERASE) {
+            drawPath?.onActionMove(event)
+        }
+    }
+
+    private fun actionUpBrushErase(event: MotionEvent) {
+        if (typeDraw == TypeDraw.BRUSH || typeDraw == TypeDraw.ERASE) {
+            drawPath?.onActionUp(event) {
+                dataDraw.add(it)
+                listPath.add(drawPath!!)
+                drawPath = null
+
+                listUndo.add(it)
+                listRedo.clear()
+                updateAllPath()
+            }
+        }
+    }
+
+    private fun actionUpSticker(event: MotionEvent) {
+        if (typeDraw == TypeDraw.STICKER) {
+            drawSticker?.onActionUp(event) {
+                dataDraw.add(it)
+                listSticker.add(drawSticker!!)
+                drawSticker = null
+
+                listUndo.add(it)
+                listRedo.clear()
+                updateAllSticker()
+            }
+        }
+    }
+
+    override fun isActiveUndo(): Boolean = true
+
+    override fun isActiveRedo(): Boolean = true
+
+    override fun onUndo() {
+        val data = listUndo.removeLastOrNull()
+        if (data != null) {
+            listRedo.add(data)
+            dataDraw.remove(data)
+        }
+
+        updateView.invoke()
     }
 
     override fun onRedo() {
 
+        val data = listRedo.removeLastOrNull()
+        if (data != null) {
+            listUndo.add(data)
+            dataDraw.add(data)
+        }
+
+        updateView.invoke()
     }
 
     override fun onClearAll() {
 
     }
 
-    private fun updateAllPath(isUpdateView: Boolean = true) {
+    override fun setSizePath(size: Float) {
+        currentPath.size = size
+    }
+
+    override fun setColorPath(color: Int) {
+        currentPath.color = color
+    }
+
+    override fun setTypeDraw(typeDraw: TypeDraw) {
+        this.typeDraw = typeDraw
+        when (typeDraw) {
+            TypeDraw.BRUSH -> {
+
+            }
+
+            TypeDraw.ERASE -> {
+                currentPath.color = Color.WHITE
+            }
+
+            TypeDraw.STICKER -> {
+
+            }
+
+            else -> {}
+        }
+    }
+
+    private fun updateAllPath() {
         val listDrawNew: MutableList<DrawPath> = mutableListOf()
 
         dataDraw.forEach {
@@ -109,28 +220,30 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         }
         listPath.clear()
         listPath.addAll(listDrawNew)
-        if (isUpdateView) {
-            updateView.invoke()
-        }
+
+        updateView.invoke()
     }
 
-    fun updateAllSticker(isUpdateView: Boolean = true) {
+    private fun updateAllSticker() {
         val listDrawNew: MutableList<DrawSticker> = mutableListOf()
 
         dataDraw.forEach {
             if (it is DrawStickerModel) {
                 var sticker = getListStickerByData(it)
                 if (sticker == null) {
-                    sticker = DrawSticker(context, it)
+                    sticker = DrawSticker(context, it, {
+                        updateView.invoke()
+                    })
                 }
                 listDrawNew.add(sticker)
             }
         }
+        Log.d("HIUIUIUIUIU", "updateAllSticker: " + listDrawNew.size)
         listSticker.clear()
         listSticker.addAll(listDrawNew)
-        if (isUpdateView) {
-            updateView.invoke()
-        }
+
+        updateView.invoke()
+
     }
 
     private fun getListPathByData(drawPath: DrawPathModel): DrawPath? {
@@ -139,7 +252,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
                 return it
             }
         }
-        if (drawPath.time == currentPath.data.time) return DrawPath(currentPath.data.copy(path = Path(currentPath.data.path)))
+
         return null
     }
 
@@ -160,7 +273,12 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
             path.moveTo(lastPoint.x, lastPoint.y)
             for (index in 1 until listPoint.size) {
                 val point = listPoint[index]
-                path.quadTo(lastPoint.x, lastPoint.y, (point.x + lastPoint.x) / 2f, (point.y + lastPoint.y) / 2f)
+                path.quadTo(
+                    lastPoint.x,
+                    lastPoint.y,
+                    (point.x + lastPoint.x) / 2f,
+                    (point.y + lastPoint.y) / 2f
+                )
                 lastPoint = point
             }
         }

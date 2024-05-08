@@ -1,5 +1,8 @@
 package com.volio.draw.model
 
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class DrawPathModel(
     var time: Long,
     val listPoint: List<DrawPoint>,

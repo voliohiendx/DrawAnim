@@ -1,4 +1,6 @@
 package com.volio.draw.model
 
-interface DataDraw {
+import android.os.Parcelable
+
+interface DataDraw: Parcelable {
 }

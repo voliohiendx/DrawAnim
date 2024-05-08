@@ -21,12 +21,110 @@
 <!--           app:layout_constraintDimensionRatio="1:1"-->
 <!--           android:background="@color/white" />-->
 
-
         <com.volio.draw.draw.DrawView
+            android:id="@+id/drawView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             app:layout_constraintDimensionRatio="1:1"
             android:background="@color/white"/>
+
+        <TextView
+            android:id="@+id/tvBrush"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:text="Brush"
+            android:gravity="center"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <TextView
+            android:id="@+id/tvEraser"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:text="Eraser"
+            android:gravity="center"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="@dimen/_100sdp"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <TextView
+            android:id="@+id/tvUndo"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:text="Undo"
+            android:gravity="center"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="@dimen/_100sdp"
+            app:layout_constraintBottom_toTopOf="@id/tvBrush" />
+
+        <TextView
+            android:id="@+id/tvRedo"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:text="Redo"
+            android:gravity="center"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="@dimen/_100sdp"
+            app:layout_constraintBottom_toTopOf="@id/tvSticker" />
+
+        <TextView
+            android:id="@+id/tvSticker"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:text="Sticker"
+            android:gravity="center"
+            app:layout_constraintBottom_toTopOf="@id/tvBrush" />
+
+        <TextView
+            android:id="@+id/tvGetData"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:text="GetData"
+            android:gravity="center"
+            app:layout_constraintBottom_toTopOf="@id/tvSticker" />
+
+        <TextView
+            android:id="@+id/tvSetData"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:text="SetData"
+            android:gravity="center"
+            app:layout_constraintBottom_toTopOf="@id/tvGetData" />
+
+        <TextView
+            android:id="@+id/tvSize"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:text="Size"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/tvGetData" />
+
+        <TextView
+            android:id="@+id/tvColor"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:text="Color"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/tvSticker" />
+
+        <TextView
+            android:id="@+id/tvZoomIn"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:text="ZoomIn"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/tvSticker" />
+
+        <TextView
+            android:id="@+id/tvZoomOut"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:text="ZoomOut"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/tvSticker" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

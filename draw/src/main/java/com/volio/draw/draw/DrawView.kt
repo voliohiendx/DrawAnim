@@ -5,18 +5,16 @@ import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import com.volio.draw.model.DataDraw
+import com.volio.draw.model.TypeDraw
 
 
 class DrawView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    val drawPath = DrawUtils(context) {
+    val drawPath = DrawLayout(context) {
         postInvalidate()
-    }
-
-    init {
-        setLayerType(LAYER_TYPE_SOFTWARE, null)
     }
 
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
@@ -30,16 +28,52 @@ class DrawView @JvmOverloads constructor(
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
-       // drawUtils.setViewSize(width, height)
+        // drawUtils.setViewSize(width, height)
     }
 
     override fun onDraw(canvas: Canvas) {
-        drawPath.draw(canvas)
+        drawPath.onDraw(canvas)
+
+
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        drawPath.touch(event)
+        drawPath.onTouch(event)
         return true
+    }
+
+    fun setTypeDraw(typeDraw: TypeDraw) {
+        drawPath.setTypeDraw(typeDraw)
+    }
+
+    fun setData(dataDraw: List<DataDraw>) {
+        drawPath.setData(dataDraw)
+    }
+
+    fun setBrushSize(size: Float) {
+        drawPath.setSizePath(size)
+    }
+
+    fun setBrushColor(color: Int) {
+        drawPath.setColorPath(color)
+    }
+
+    fun getDataDraw(): List<DataDraw> = drawPath.getDataDraw()
+
+    fun isActiveUndo(): Boolean {
+        return drawPath.isActiveUndo()
+    }
+
+    fun isActiveRedo(): Boolean {
+        return drawPath.isActiveRedo()
+    }
+
+    fun undo() {
+        drawPath.onUndo()
+    }
+
+    fun redo() {
+        drawPath.onRedo()
     }
 
 }

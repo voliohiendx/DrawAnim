@@ -18,31 +18,41 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class DrawSticker(
-        private val context: Context,
-        var data: DrawStickerModel
+    private val context: Context,
+    var data: DrawStickerModel,
+    private val updateView: () -> Unit
 ) {
     private var paintBitmap: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var bitmap: Bitmap? = null
     private var rectScr: Rect = Rect()
     private var rectDst: RectF = RectF()
     var pointOrigin = Point(0, 0)
+    var pointUp = DrawPoint(0f, 0f)
+    var pointDown = DrawPoint(0f, 0f)
 
     init {
-       // loadImage()
 
         rectDst.set(
-                data.pointDown.x,
-                data.pointDown.y,
-                data.pointUp.x - data.pointDown.x,
-                data.pointUp.y - data.pointDown.y
+            data.pointDown.x,
+            data.pointDown.y,
+            data.pointUp.x,
+            data.pointUp.y
         )
+
+        CoroutineScope(Dispatchers.IO).launch {
+            loadImage()
+            withContext(Dispatchers.Main) {
+                updateView.invoke()
+            }
+        }
     }
+
 
     private fun loadImage() {
         CoroutineScope(Dispatchers.IO).launch {
             bitmap = Glide.with(context).asBitmap()
-                    .load(data.path)
-                    .submit().get()
+                .load(data.path)
+                .submit().get()
 
             bitmap?.let {
                 rectScr.set(0, 0, it.width, it.height)
@@ -52,20 +62,8 @@ class DrawSticker(
 
     fun onDraw(canvas: Canvas) {
         bitmap?.let {
+            Log.d("HIUIUIUIUIU", "onDraw: ")
             canvas.drawBitmap(it, rectScr, rectDst, paintBitmap)
-        }?:run {
-            CoroutineScope(Dispatchers.IO).launch {
-                bitmap = Glide.with(context).asBitmap()
-                        .load(data.path)
-                        .submit().get()
-
-                bitmap?.let {
-                    rectScr.set(0, 0, it.width, it.height)
-                    withContext(Dispatchers.Main){
-                        canvas.drawBitmap(it, rectScr, rectDst, paintBitmap)
-                    }
-                }
-            }
         }
     }
 
@@ -74,17 +72,57 @@ class DrawSticker(
     }
 
     fun onActionMove(event: MotionEvent) {
+        if (event.y > pointOrigin.y) {
+            if (event.x > pointOrigin.x) {
+                pointDown = DrawPoint(
+                    pointOrigin.x.toFloat(),
+                    pointOrigin.y.toFloat()
+                )
+                pointUp = DrawPoint(event.x, event.y)
+            } else {
+                pointDown = DrawPoint(
+                    event.x,
+                    pointOrigin.y.toFloat(),
+                )
+                pointUp = DrawPoint(
+                    pointOrigin.x.toFloat(),
+                    event.y,
+                )
+            }
+        } else {
+            if (event.x > pointOrigin.x) {
+                pointDown = DrawPoint(
+                    pointOrigin.x.toFloat(),
+                    event.y,
+                )
+                pointUp = DrawPoint(
+                    event.x,
+                    pointOrigin.y.toFloat()
+                )
+            } else {
+                pointDown = DrawPoint(
+                    event.x,
+                    event.y,
+                )
+                pointUp = DrawPoint(
+                    pointOrigin.x.toFloat(),
+                    pointOrigin.y.toFloat()
+                )
+            }
+        }
+
         rectDst.set(
-                pointOrigin.x.toFloat(),
-                pointOrigin.y.toFloat(),
-                event.x - pointOrigin.x,
-                event.y - pointOrigin.y
+            pointDown.x,
+            pointDown.y,
+            pointUp.x,
+            pointUp.y
         )
+
     }
 
     fun onActionUp(event: MotionEvent, onUpdate: (DrawStickerModel) -> Unit) {
-        data.pointUp = (DrawPoint(event.x, event.y))
-        data.pointDown = (DrawPoint(pointOrigin.x.toFloat(), pointOrigin.y.toFloat()))
+        data.pointUp = pointUp
+        data.pointDown = pointDown
 
         onUpdate(data)
     }
