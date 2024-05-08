@@ -15,10 +15,11 @@ import com.volio.draw.model.DrawStickerModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class DrawSticker(
-    private val context: Context,
-    var data: DrawStickerModel
+        private val context: Context,
+        var data: DrawStickerModel
 ) {
     private var paintBitmap: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var bitmap: Bitmap? = null
@@ -27,20 +28,21 @@ class DrawSticker(
     var pointOrigin = Point(0, 0)
 
     init {
+       // loadImage()
+
         rectDst.set(
-            data.pointDown.x,
-            data.pointDown.y,
-            data.pointUp.x - data.pointDown.x,
-            data.pointUp.y - data.pointDown.y
+                data.pointDown.x,
+                data.pointDown.y,
+                data.pointUp.x - data.pointDown.x,
+                data.pointUp.y - data.pointDown.y
         )
-        loadImage()
     }
 
     private fun loadImage() {
         CoroutineScope(Dispatchers.IO).launch {
             bitmap = Glide.with(context).asBitmap()
-                .load(data.path)
-                .submit().get()
+                    .load(data.path)
+                    .submit().get()
 
             bitmap?.let {
                 rectScr.set(0, 0, it.width, it.height)
@@ -51,30 +53,39 @@ class DrawSticker(
     fun onDraw(canvas: Canvas) {
         bitmap?.let {
             canvas.drawBitmap(it, rectScr, rectDst, paintBitmap)
-        }
-    }
+        }?:run {
+            CoroutineScope(Dispatchers.IO).launch {
+                bitmap = Glide.with(context).asBitmap()
+                        .load(data.path)
+                        .submit().get()
 
-    fun onTouch(event: MotionEvent) {
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                pointOrigin = Point(event.x.toInt(), event.y.toInt())
-            }
-
-            MotionEvent.ACTION_MOVE -> {
-                rectDst.set(
-                    pointOrigin.x.toFloat(),
-                    pointOrigin.y.toFloat(),
-                    event.x - pointOrigin.x,
-                    event.y - pointOrigin.y
-                )
-            }
-
-            MotionEvent.ACTION_UP -> {
-                data.pointUp = (DrawPoint(event.x, event.y))
-                data.pointDown = (DrawPoint(pointOrigin.x.toFloat(), pointOrigin.y.toFloat()))
+                bitmap?.let {
+                    rectScr.set(0, 0, it.width, it.height)
+                    withContext(Dispatchers.Main){
+                        canvas.drawBitmap(it, rectScr, rectDst, paintBitmap)
+                    }
+                }
             }
         }
     }
 
+    fun onActionDown(event: MotionEvent) {
+        pointOrigin = Point(event.x.toInt(), event.y.toInt())
+    }
 
+    fun onActionMove(event: MotionEvent) {
+        rectDst.set(
+                pointOrigin.x.toFloat(),
+                pointOrigin.y.toFloat(),
+                event.x - pointOrigin.x,
+                event.y - pointOrigin.y
+        )
+    }
+
+    fun onActionUp(event: MotionEvent, onUpdate: (DrawStickerModel) -> Unit) {
+        data.pointUp = (DrawPoint(event.x, event.y))
+        data.pointDown = (DrawPoint(pointOrigin.x.toFloat(), pointOrigin.y.toFloat()))
+
+        onUpdate(data)
+    }
 }

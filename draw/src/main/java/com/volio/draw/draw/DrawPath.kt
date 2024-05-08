@@ -4,6 +4,7 @@ import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Point
 import android.view.MotionEvent
 import com.volio.draw.model.DrawPoint
 import com.volio.draw.model.PathDrawData
@@ -24,22 +25,19 @@ class DrawPath(
         drawPathDefault(canvas, data)
     }
 
-    fun onTouch(event: MotionEvent) {
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                listDrawPoint = mutableListOf()
-            }
-
-            MotionEvent.ACTION_MOVE -> {
-                listDrawPoint.add(DrawPoint(event.x, event.y))
-                updatePath(data.path, listDrawPoint)
-            }
-
-            MotionEvent.ACTION_UP -> {
-
-            }
-        }
+    fun onActionDown(event: MotionEvent){
+        listDrawPoint = mutableListOf()
     }
+
+    fun onActionMove(event: MotionEvent){
+        listDrawPoint.add(DrawPoint(event.x, event.y))
+        updatePath(data.path, listDrawPoint)
+    }
+
+    fun onActionUp(event: MotionEvent){
+
+    }
+
 
     private fun updatePath(path: Path, listPoint: List<DrawPoint>) {
         path.reset()
