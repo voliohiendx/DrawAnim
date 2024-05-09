@@ -25,4 +25,8 @@ interface DrawCanvas {
     fun setColorPath(color: Int)
 
     fun setTypeDraw(typeDraw: TypeDraw)
+
+    fun zoomIn()
+
+    fun zoomOut()
 }

@@ -8,5 +8,5 @@ data class DrawPathModel(
     val listPoint: List<DrawPoint>,
     var size: Float,
     val color: Int,
-    var brushType: Int = 0
+    var brushType: BrushType
 ):DataDraw

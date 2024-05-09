@@ -7,7 +7,7 @@ data class PathDrawData(
     val path: Path,
     var size: Float,
     var color: Int,
-    var brushType: Int
+    var brushType: BrushType
 ) {
     fun copy(): PathDrawData {
         return PathDrawData(System.currentTimeMillis(), Path(), size, color, brushType)

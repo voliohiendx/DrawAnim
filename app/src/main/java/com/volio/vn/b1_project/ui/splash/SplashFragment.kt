@@ -77,6 +77,14 @@ class SplashFragment : BaseFragment<FragmentSplashBinding, SplashNavigation>() {
             binding.drawView.redo()
         }
 
+        binding.tvZoomIn.setPreventDoubleClick {
+            binding.drawView.zoomIn()
+        }
+
+        binding.tvZoomOut.setPreventDoubleClick {
+            binding.drawView.zoomOut()
+        }
+
 
 //        binding.imgTest.loadImage(bitmap = imageFloodFill)
 //

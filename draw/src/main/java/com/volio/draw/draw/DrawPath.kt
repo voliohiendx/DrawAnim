@@ -5,7 +5,10 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Point
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.view.MotionEvent
+import com.volio.draw.model.BrushType
 import com.volio.draw.model.DrawPathModel
 import com.volio.draw.model.DrawPoint
 import com.volio.draw.model.DrawStickerModel
@@ -21,22 +24,31 @@ class DrawPath(
         maskFilter = BlurMaskFilter(1f, BlurMaskFilter.Blur.NORMAL)
     }
 
+    private var paintErase: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeJoin = Paint.Join.ROUND
+        strokeCap = Paint.Cap.ROUND
+        maskFilter = BlurMaskFilter(2f, BlurMaskFilter.Blur.NORMAL)
+        xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+
+    }
+
     var listDrawPoint: MutableList<DrawPoint> = mutableListOf()
 
     fun onDraw(canvas: Canvas) {
-        drawPathDefault(canvas, data)
+        drawPath(canvas, data)
     }
 
-    fun onActionDown(event: MotionEvent) {
+    fun onActionDown() {
         listDrawPoint = mutableListOf()
     }
 
-    fun onActionMove(event: MotionEvent) {
-        listDrawPoint.add(DrawPoint(event.x, event.y))
+    fun onActionMove(x: Float, y: Float) {
+        listDrawPoint.add(DrawPoint(x, y))
         updatePath(data.path, listDrawPoint)
     }
 
-    fun onActionUp(event: MotionEvent, onUpdate: (DrawPathModel) -> Unit) {
+    fun onActionUp(onUpdate: (DrawPathModel) -> Unit) {
         onUpdate(
             DrawPathModel(
                 System.currentTimeMillis(),
@@ -46,7 +58,6 @@ class DrawPath(
                 data.brushType
             )
         )
-
     }
 
     private fun updatePath(path: Path, listPoint: List<DrawPoint>) {
@@ -67,9 +78,15 @@ class DrawPath(
         }
     }
 
-    private fun drawPathDefault(canvas: Canvas, dataPathDraw: PathDrawData) {
+    fun drawPath(canvas: Canvas, dataPathDraw: PathDrawData) {
         paintPath.color = dataPathDraw.color
         paintPath.strokeWidth = dataPathDraw.size
-        canvas.drawPath(dataPathDraw.path, paintPath)
+        paintErase.strokeWidth = dataPathDraw.size
+        canvas.drawPath(
+            dataPathDraw.path,
+            if (dataPathDraw.brushType == BrushType.ERASE) paintErase else paintPath
+        )
+
     }
+
 }

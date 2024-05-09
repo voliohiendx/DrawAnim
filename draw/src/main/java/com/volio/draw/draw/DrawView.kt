@@ -2,6 +2,7 @@ package com.volio.draw.draw
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Matrix
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
@@ -12,6 +13,11 @@ import com.volio.draw.model.TypeDraw
 class DrawView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
+
+    init {
+        setLayerType(LAYER_TYPE_HARDWARE, null)
+    }
+
 
     val drawPath = DrawLayout(context) {
         postInvalidate()
@@ -28,13 +34,11 @@ class DrawView @JvmOverloads constructor(
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
-        // drawUtils.setViewSize(width, height)
+        drawPath.setViewSize(width, height)
     }
 
     override fun onDraw(canvas: Canvas) {
         drawPath.onDraw(canvas)
-
-
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -74,6 +78,14 @@ class DrawView @JvmOverloads constructor(
 
     fun redo() {
         drawPath.onRedo()
+    }
+
+    fun zoomIn() {
+        drawPath.zoomIn()
+    }
+
+    fun zoomOut() {
+        drawPath.zoomOut()
     }
 
 }

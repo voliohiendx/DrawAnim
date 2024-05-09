@@ -18,9 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class DrawSticker(
-    private val context: Context,
-    var data: DrawStickerModel,
-    private val updateView: () -> Unit
+    private val context: Context, var data: DrawStickerModel, private val updateView: () -> Unit
 ) {
     private var paintBitmap: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var bitmap: Bitmap? = null
@@ -33,10 +31,7 @@ class DrawSticker(
     init {
 
         rectDst.set(
-            data.pointDown.x,
-            data.pointDown.y,
-            data.pointUp.x,
-            data.pointUp.y
+            data.pointDown.x, data.pointDown.y, data.pointUp.x, data.pointUp.y
         )
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -50,9 +45,7 @@ class DrawSticker(
 
     private fun loadImage() {
         CoroutineScope(Dispatchers.IO).launch {
-            bitmap = Glide.with(context).asBitmap()
-                .load(data.path)
-                .submit().get()
+            bitmap = Glide.with(context).asBitmap().load(data.path).submit().get()
 
             bitmap?.let {
                 rectScr.set(0, 0, it.width, it.height)
@@ -67,60 +60,54 @@ class DrawSticker(
         }
     }
 
-    fun onActionDown(event: MotionEvent) {
-        pointOrigin = Point(event.x.toInt(), event.y.toInt())
+    fun onActionDown(x: Float, y: Float) {
+        pointOrigin = Point(x.toInt(), y.toInt())
     }
 
-    fun onActionMove(event: MotionEvent) {
-        if (event.y > pointOrigin.y) {
-            if (event.x > pointOrigin.x) {
+    fun onActionMove(x: Float, y: Float) {
+        if (y > pointOrigin.y) {
+            if (x > pointOrigin.x) {
                 pointDown = DrawPoint(
-                    pointOrigin.x.toFloat(),
-                    pointOrigin.y.toFloat()
+                    pointOrigin.x.toFloat(), pointOrigin.y.toFloat()
                 )
-                pointUp = DrawPoint(event.x, event.y)
+                pointUp = DrawPoint(x, y)
             } else {
                 pointDown = DrawPoint(
-                    event.x,
+                    x,
                     pointOrigin.y.toFloat(),
                 )
                 pointUp = DrawPoint(
                     pointOrigin.x.toFloat(),
-                    event.y,
+                    y,
                 )
             }
         } else {
-            if (event.x > pointOrigin.x) {
+            if (x > pointOrigin.x) {
                 pointDown = DrawPoint(
                     pointOrigin.x.toFloat(),
-                    event.y,
+                    y,
                 )
                 pointUp = DrawPoint(
-                    event.x,
-                    pointOrigin.y.toFloat()
+                    x, pointOrigin.y.toFloat()
                 )
             } else {
                 pointDown = DrawPoint(
-                    event.x,
-                    event.y,
+                    x,
+                    y,
                 )
                 pointUp = DrawPoint(
-                    pointOrigin.x.toFloat(),
-                    pointOrigin.y.toFloat()
+                    pointOrigin.x.toFloat(), pointOrigin.y.toFloat()
                 )
             }
         }
 
         rectDst.set(
-            pointDown.x,
-            pointDown.y,
-            pointUp.x,
-            pointUp.y
+            pointDown.x, pointDown.y, pointUp.x, pointUp.y
         )
 
     }
 
-    fun onActionUp(event: MotionEvent, onUpdate: (DrawStickerModel) -> Unit) {
+    fun onActionUp(onUpdate: (DrawStickerModel) -> Unit) {
         data.pointUp = pointUp
         data.pointDown = pointDown
 
