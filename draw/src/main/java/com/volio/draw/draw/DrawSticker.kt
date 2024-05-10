@@ -8,10 +8,9 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.graphics.RectF
 import android.util.Log
-import android.view.MotionEvent
 import com.bumptech.glide.Glide
 import com.volio.draw.model.DrawPoint
-import com.volio.draw.model.DrawStickerModel
+import com.volio.draw.model.draw.DrawStickerModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -4,14 +4,11 @@ import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
-import android.graphics.Point
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
-import android.view.MotionEvent
 import com.volio.draw.model.BrushType
-import com.volio.draw.model.DrawPathModel
+import com.volio.draw.model.draw.DrawPathModel
 import com.volio.draw.model.DrawPoint
-import com.volio.draw.model.DrawStickerModel
 import com.volio.draw.model.PathDrawData
 
 class DrawPath(
@@ -86,7 +83,6 @@ class DrawPath(
             dataPathDraw.path,
             if (dataPathDraw.brushType == BrushType.ERASE) paintErase else paintPath
         )
-
     }
 
 }

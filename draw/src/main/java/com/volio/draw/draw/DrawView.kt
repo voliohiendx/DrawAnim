@@ -88,4 +88,9 @@ class DrawView @JvmOverloads constructor(
         drawPath.zoomOut()
     }
 
+    fun fillOn(){
+        drawPath.fillOn()
+
+    }
+
 }

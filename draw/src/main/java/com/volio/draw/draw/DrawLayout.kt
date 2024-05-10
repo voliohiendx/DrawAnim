@@ -15,11 +15,13 @@ import android.view.MotionEvent
 import com.volio.draw.model.ActionMode
 import com.volio.draw.model.BrushType
 import com.volio.draw.model.DataDraw
-import com.volio.draw.model.DrawPathModel
+import com.volio.draw.model.draw.DrawPathModel
 import com.volio.draw.model.DrawPoint
-import com.volio.draw.model.DrawStickerModel
+import com.volio.draw.model.FillDrawData
+import com.volio.draw.model.draw.DrawStickerModel
 import com.volio.draw.model.PathDrawData
 import com.volio.draw.model.TypeDraw
+import com.volio.draw.model.draw.DrawFillModel
 import kotlin.math.sqrt
 
 
@@ -53,6 +55,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
 
     private var listPath: MutableList<DrawPath> = mutableListOf()
     private var listSticker: MutableList<DrawSticker> = mutableListOf()
+    private var listFill: MutableList<DrawFill> = mutableListOf()
 
     private var currentPath: PathDrawData =
         PathDrawData(System.currentTimeMillis(), Path(), 10f, Color.BLACK, BrushType.BRUSH)
@@ -64,6 +67,11 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         DrawPoint(0f, 0f)
     )
 
+    private var currentFill: DrawFillModel = DrawFillModel(
+        System.currentTimeMillis(),
+        0, 0, 0
+    )
+
     private var drawPath: DrawPath? = DrawPath(currentPath.copy())
 
     private var drawSticker: DrawSticker? = DrawSticker(
@@ -71,10 +79,13 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         currentSticker, {}
     )
 
+  //  private var drawFill: DrawFill? = null
+
     fun setData(dataDraw: List<DataDraw>) {
         this.dataDraw = dataDraw.toMutableList()
         updateAllSticker()
         updateAllPath()
+        updateAllFill()
         updateView.invoke()
     }
 
@@ -84,6 +95,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         viewWidth = width
         viewHeight = height
         rectBorder = RectF(0f, 0f, width.toFloat(), height.toFloat())
+
     }
 
     @SuppressLint("DrawAllocation")
@@ -105,14 +117,20 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
 
     private fun drawViewDraw(canvas: Canvas) {
         dataDraw.forEachIndexed { index, data ->
-            if (data is DrawPathModel) {
-                getListPathByData(data)?.onDraw(canvas)
-            } else {
-                if (data is DrawStickerModel) {
+            when(data){
+                is DrawPathModel->{
+                    getListPathByData(data)?.onDraw(canvas)
+                }
+                is DrawStickerModel->{
                     getListStickerByData(data)?.onDraw(canvas)
+                }
+
+                is DrawFillModel->{
+                    getListFillByData(data)?.onDraw(canvas)
                 }
             }
         }
+        Log.d("3223223", "drawViewDraw: "+dataDraw.size)
 
         drawSticker?.onDraw(canvas)
         drawPath?.onDraw(canvas)
@@ -172,6 +190,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
             MotionEvent.ACTION_DOWN -> {
                 actionDownBrushErase()
                 actionDownSticker(x, y)
+                actionDownFill(x, y)
                 downX = event.x
                 downY = event.y
 
@@ -181,6 +200,33 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
 
         updateView.invoke()
     }
+
+    private fun actionDownFill(x: Float, y: Float) {
+        if (typeDraw == TypeDraw.FILL) {
+            val currentBitmap: Bitmap =
+                Bitmap.createBitmap(viewWidth, viewHeight, Bitmap.Config.ARGB_8888)
+            val canvasBitmap: Canvas = Canvas(currentBitmap)
+            drawViewDraw(canvasBitmap)
+
+            DrawFill(
+                context,
+                FillDrawData(System.currentTimeMillis(), currentBitmap, 0, 0, 0),
+                viewWidth,
+                viewHeight
+            ).apply {
+                setFloodFill(x.toInt(), y.toInt(), Color.RED) {
+                    val drawFillModel= DrawFillModel(it.time, it.x, it.y, Color.RED)
+                    dataDraw.add(drawFillModel)
+                    listFill.add(this)
+
+                    listUndo.add(drawFillModel)
+                    listRedo.clear()
+                    updateAllFill()
+                }
+            }
+        }
+    }
+
 
     private fun actionMoveScale(event: MotionEvent) {
         val newDistance = calculateDistance(event)
@@ -288,7 +334,6 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
             listRedo.add(data)
             dataDraw.remove(data)
         }
-
         updateView.invoke()
     }
 
@@ -347,6 +392,10 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         updateView()
     }
 
+    fun fillOn() {
+        typeDraw = TypeDraw.FILL
+    }
+
     private fun updateAllPath() {
         val listDrawNew: MutableList<DrawPath> = mutableListOf()
 
@@ -363,6 +412,42 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         }
         listPath.clear()
         listPath.addAll(listDrawNew)
+
+        updateView.invoke()
+    }
+
+    private fun updateAllFill() {
+
+        val listDrawNew: MutableList<DrawFill> = mutableListOf()
+
+        dataDraw.forEach {
+            if (it is DrawFillModel) {
+                val draw = getListFillByData(it)
+                if (draw == null) {
+                    val currentBitmap: Bitmap =
+                        Bitmap.createBitmap(viewWidth, viewHeight, Bitmap.Config.ARGB_8888)
+                    val canvasBitmap: Canvas = Canvas(currentBitmap)
+                    drawViewDraw(canvasBitmap)
+
+                    val drawFill = DrawFill(
+                        context,
+                        FillDrawData(it.time, currentBitmap, it.x, it.y, it.color),
+                        viewWidth,
+                        viewHeight
+                    )
+
+                    drawFill.setFloodFill(it.x, it.y, it.color) {
+                        drawFill.data = it
+                        listDrawNew.add(drawFill)
+                    }
+                } else {
+                    listDrawNew.add(draw)
+                }
+            }
+        }
+
+        listFill.clear()
+        listFill.addAll(listDrawNew)
 
         updateView.invoke()
     }
@@ -401,6 +486,16 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
     private fun getListStickerByData(drawSticker: DrawStickerModel): DrawSticker? {
         listSticker.forEach {
             if (it.data.time == drawSticker.time) {
+                return it
+            }
+        }
+
+        return null
+    }
+
+    private fun getListFillByData(drawFill: DrawFillModel): DrawFill? {
+        listFill.forEach {
+            if (it.data.time == drawFill.time) {
                 return it
             }
         }
@@ -450,5 +545,6 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         midPoint[x] = y
         return midPoint
     }
+
 
 }

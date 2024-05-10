@@ -85,40 +85,43 @@ class SplashFragment : BaseFragment<FragmentSplashBinding, SplashNavigation>() {
             binding.drawView.zoomOut()
         }
 
-
-//        binding.imgTest.loadImage(bitmap = imageFloodFill)
-//
-//
-//        binding.imgTest.setOnTouchListener { v, event ->
-//            when (event.action) {
-//                MotionEvent.ACTION_UP -> {
-//                    val queueLinearFloodFiller = QueueLinearFloodFiller(
-//                        imageFloodFill,
-//                        imageFloodFill.getPixel(
-//                            event.x.toInt() * imageFloodFill.width / binding.imgTest.width,
-//                            event.y.toInt() * imageFloodFill.width / binding.imgTest.width
-//                        ),
-//                        Color.RED
-//                    )
-//
-//                    queueLinearFloodFiller.floodFill(
-//                        event.x.toInt() * imageFloodFill.width / binding.imgTest.width,
-//                        event.y.toInt() * imageFloodFill.width / binding.imgTest.width
-//                    )
-//
-//                    binding.imgTest.setImageBitmap(queueLinearFloodFiller.image)
-//
-//                }
-//
-//                else -> {
-//
-//                }
-//            }
-//            return@setOnTouchListener true
-//        }
+        binding.tvFill.setPreventDoubleClick {
+            binding.drawView.fillOn()
+        }
 
 
-        //   binding.imgTest.loadImage(bitmap = queueLinearFloodFiller.image)
+        binding.imgTest.loadImage(bitmap = imageFloodFill)
+
+
+        binding.imgTest.setOnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_UP -> {
+                    val queueLinearFloodFiller = QueueLinearFloodFiller(
+                        imageFloodFill,
+                        imageFloodFill.getPixel(
+                            event.x.toInt() * imageFloodFill.width / binding.imgTest.width,
+                            event.y.toInt() * imageFloodFill.width / binding.imgTest.width
+                        ),
+                        Color.RED
+                    )
+
+                    queueLinearFloodFiller.floodFill(
+                        event.x.toInt() * imageFloodFill.width / binding.imgTest.width,
+                        event.y.toInt() * imageFloodFill.width / binding.imgTest.width
+                    )
+
+                    binding.imgTest.setImageBitmap(queueLinearFloodFiller.image)
+
+                }
+
+                else -> {
+
+                }
+            }
+            return@setOnTouchListener true
+        }
+
+     //   binding.imgTest.loadImage(bitmap = queueLinearFloodFiller.image)
 
     }
 

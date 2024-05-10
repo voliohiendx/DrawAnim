@@ -1,5 +1,7 @@
-package com.volio.draw.model
+package com.volio.draw.model.draw
 
+import com.volio.draw.model.DataDraw
+import com.volio.draw.model.DrawPoint
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
