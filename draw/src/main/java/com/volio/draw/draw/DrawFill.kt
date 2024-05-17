@@ -1,13 +1,13 @@
 package com.volio.draw.draw
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
+import android.util.Log
 import com.volio.draw.QueueLinearFloodFiller
-import com.volio.draw.model.FillDrawData
+import com.volio.draw.model.data.FillDrawData
 
 class DrawFill(
     private val context: Context,
@@ -39,6 +39,8 @@ class DrawFill(
     }
 
     fun setFloodFill(x: Int, y: Int, newColor: Int, onFloodFillSuccess: (FillDrawData) -> Unit) {
+        Log.d("HIUIUIIUYYpppp", "y: "+y)
+        Log.d("HIUIUIIUYYpppp", "height: "+data.bitmap.height)
         queueLinearFloodFiller.floodFill(x, y, newColor) {
             data.bitmap = it
             data.x = x

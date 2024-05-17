@@ -9,7 +9,7 @@ import android.graphics.PorterDuffXfermode
 import com.volio.draw.model.BrushType
 import com.volio.draw.model.draw.DrawPathModel
 import com.volio.draw.model.DrawPoint
-import com.volio.draw.model.PathDrawData
+import com.volio.draw.model.data.PathDrawData
 
 class DrawPath(
     var data: PathDrawData
@@ -18,7 +18,6 @@ class DrawPath(
         style = Paint.Style.STROKE
         strokeJoin = Paint.Join.ROUND
         strokeCap = Paint.Cap.ROUND
-        maskFilter = BlurMaskFilter(1f, BlurMaskFilter.Blur.NORMAL)
     }
 
     private var paintErase: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {

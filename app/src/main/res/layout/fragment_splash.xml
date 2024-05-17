@@ -15,6 +15,7 @@
         android:layout_height="match_parent"
         android:background="#9F5656">
 
+
         <!--       <com.volio.vn.data.models.DrawView-->
         <!--           android:layout_width="match_parent"-->
         <!--           android:layout_height="0dp"-->
@@ -24,9 +25,77 @@
         <com.volio.draw.draw.DrawView
             android:id="@+id/drawView"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:background="#525252"
-            app:layout_constraintDimensionRatio="1:1" />
+            android:layout_height="match_parent"
+            android:background="#525252" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_150sdp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_50sdp">
+
+                <TextView
+                    android:id="@+id/tvAddFrame"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_40sdp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Add Frame"
+                    android:textColor="@color/white" />
+
+                <TextView
+                    android:id="@+id/tvShowRandom"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_40sdp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Show Random"
+                    android:textColor="@color/white" />
+
+                <TextView
+                    android:id="@+id/tvPlay"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_40sdp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Play"
+                    android:textColor="@color/white" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_50sdp">
+
+                <TextView
+                    android:id="@+id/tvExport"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_40sdp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Export"
+                    android:textColor="@color/white" />
+
+                <TextView
+                    android:id="@+id/tvBackground"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_40sdp"
+                    android:layout_weight="1"
+                    android:text="Background"
+                    android:gravity="center"
+                    android:textColor="@color/white" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_40sdp"
+
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textColor="@color/white" />
+            </LinearLayout>
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvBrush"
@@ -45,6 +114,37 @@
             android:text="Eraser"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/tvCircle"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:layout_marginStart="@dimen/_200sdp"
+            android:gravity="center"
+            android:text="Circle"
+            app:layout_constraintBottom_toTopOf="@id/tvRedo"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/tvSquare"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:layout_marginStart="@dimen/_200sdp"
+            android:gravity="center"
+            android:text="Square"
+            app:layout_constraintBottom_toTopOf="@id/tvSticker"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/tvLine"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_48sdp"
+            android:layout_marginStart="@dimen/_200sdp"
+            android:gravity="center"
+            android:text="Line"
+            app:layout_constraintBottom_toTopOf="@id/tvBrush"
+            app:layout_constraintStart_toStartOf="parent" />
+
 
         <TextView
             android:id="@+id/tvUndo"
@@ -137,10 +237,10 @@
             app:layout_constraintEnd_toEndOf="parent" />
 
         <ImageView
-            android:visibility="gone"
             android:id="@+id/imgTest"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

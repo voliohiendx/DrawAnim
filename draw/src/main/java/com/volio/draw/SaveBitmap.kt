@@ -8,14 +8,12 @@ import java.io.IOException
 
 fun Bitmap.saveBitmapToInternalStorage(context: Context, filename: String): String? {
 
-    val storageDir = context.filesDir
-
-    val imageFile = File(storageDir, filename)
+    val imageFile = File(getDirTemp(context), filename)
 
     var fos: FileOutputStream? = null
     try {
         fos = FileOutputStream(imageFile)
-        this.compress(Bitmap.CompressFormat.PNG, 100, fos)
+        this.compress(Bitmap.CompressFormat.PNG, 80, fos)
         return imageFile.absolutePath
     } catch (e: IOException) {
         e.printStackTrace()
@@ -24,4 +22,12 @@ fun Bitmap.saveBitmapToInternalStorage(context: Context, filename: String): Stri
         fos?.close()
     }
 
+}
+
+fun getDirTemp(context: Context): File {
+    val dir = File(context.filesDir, "project")
+    if (!dir.exists()) {
+        dir.mkdirs()
+    }
+    return dir
 }

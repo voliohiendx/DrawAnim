@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import com.volio.draw.model.DataDraw
+import com.volio.draw.model.TypeCubes
 import com.volio.draw.model.TypeDraw
 
 
@@ -88,9 +89,18 @@ class DrawView @JvmOverloads constructor(
         drawPath.zoomOut()
     }
 
-    fun fillOn(){
+    fun fillOn() {
         drawPath.fillOn()
 
     }
+
+    fun cubes(typeCubes: TypeCubes) {
+        drawPath.cubesType(typeCubes)
+    }
+
+    fun setBackgroundBitmap(path: String) {
+        drawPath.setBackground(path)
+    }
+
 
 }

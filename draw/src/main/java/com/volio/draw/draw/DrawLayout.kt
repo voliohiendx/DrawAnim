@@ -9,19 +9,27 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PointF
+import android.graphics.Rect
 import android.graphics.RectF
 import android.util.Log
 import android.view.MotionEvent
+import com.bumptech.glide.Glide
 import com.volio.draw.model.ActionMode
 import com.volio.draw.model.BrushType
 import com.volio.draw.model.DataDraw
 import com.volio.draw.model.draw.DrawPathModel
 import com.volio.draw.model.DrawPoint
-import com.volio.draw.model.FillDrawData
+import com.volio.draw.model.TypeCubes
+import com.volio.draw.model.data.FillDrawData
 import com.volio.draw.model.draw.DrawStickerModel
-import com.volio.draw.model.PathDrawData
+import com.volio.draw.model.data.PathDrawData
 import com.volio.draw.model.TypeDraw
+import com.volio.draw.model.draw.DrawCubesModel
 import com.volio.draw.model.draw.DrawFillModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.sqrt
 
 
@@ -30,12 +38,29 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
     private var matrix: Matrix = Matrix()
     private var matrixInvert: Matrix = Matrix()
 
+    private var saveDrawBitmap: Pair<Int, Bitmap>? = null
+    private var startDraw: Int = 0
+    private var endDraw: Int = 0
+
+    private var bitmapBackground: Bitmap? = null
+
     private var rectBorder: RectF = RectF()
     private var rectAfter: RectF = RectF()
     private var paintBackground: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
         color = Color.WHITE
     }
+
+    private var paintGrid: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeJoin = Paint.Join.ROUND
+        color = Color.RED
+        strokeWidth = 2f
+    }
+    private var paintBitmap: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    private val numberOfColumnCells = 12
+
     private var oldDistance = 0f
     private var lastDown = 0f
     private var midPoint = PointF()
@@ -48,6 +73,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
     private var viewHeight: Int = 0
 
     private var typeDraw: TypeDraw = TypeDraw.BRUSH
+    private var typeCubes: TypeCubes = TypeCubes.CIRCLE
 
     private var dataDraw = mutableListOf<DataDraw>()
     private val listUndo: ArrayDeque<DataDraw> = ArrayDeque()
@@ -55,6 +81,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
 
     private var listPath: MutableList<DrawPath> = mutableListOf()
     private var listSticker: MutableList<DrawSticker> = mutableListOf()
+    private var listCubes: MutableList<DrawCubes> = mutableListOf()
     private var listFill: MutableList<DrawFill> = mutableListOf()
 
     private var currentPath: PathDrawData =
@@ -67,35 +94,78 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         DrawPoint(0f, 0f)
     )
 
-    private var currentFill: DrawFillModel = DrawFillModel(
-        System.currentTimeMillis(),
-        0, 0, 0
-    )
-
     private var drawPath: DrawPath? = DrawPath(currentPath.copy())
 
-    private var drawSticker: DrawSticker? = DrawSticker(
-        context,
-        currentSticker, {}
-    )
+    private var drawCubes: DrawCubes? = null
 
-  //  private var drawFill: DrawFill? = null
+    private var drawSticker: DrawSticker? = DrawSticker(context, currentSticker, {})
 
     fun setData(dataDraw: List<DataDraw>) {
         this.dataDraw = dataDraw.toMutableList()
+        saveDrawBitmap = null
+        updateBitmapCache()
+
         updateAllSticker()
         updateAllPath()
         updateAllFill()
+        updateAllCubes()
+
         updateView.invoke()
     }
 
     fun getDataDraw(): List<DataDraw> = dataDraw
 
     fun setViewSize(width: Int, height: Int) {
-        viewWidth = width
-        viewHeight = height
-        rectBorder = RectF(0f, 0f, width.toFloat(), height.toFloat())
+        viewWidth = (width * 0.8f).toInt()
+        viewHeight = viewWidth
 
+        rectBorder = RectF(0f, 0f, viewWidth.toFloat(), viewHeight.toFloat())
+
+        //keo view ve giua
+        matrix.reset()
+        matrix.postTranslate(width / 2f - viewWidth / 2, height / 2f - viewHeight / 2)
+
+        matrix.invert(matrixInvert)
+
+    }
+
+    fun setBackground(path: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            bitmapBackground = Glide.with(context).asBitmap().load(path).submit().get()
+            withContext(Dispatchers.Main) {
+                updateView.invoke()
+            }
+        }
+    }
+
+    private fun updateBitmapCache() {
+
+        if (dataDraw.isEmpty()) return
+
+        val indexSaveBitmap = ((dataDraw.size - 1) / 10) * 10
+
+        startDraw = indexSaveBitmap
+        endDraw = dataDraw.size - 1
+
+        if (indexSaveBitmap > 0) {
+            saveDrawBitmap?.let { data ->
+                if (data.first != indexSaveBitmap) {
+                    saveDrawBitmap = drawBitmapCache(indexSaveBitmap)
+                }
+            } ?: run {
+                saveDrawBitmap = drawBitmapCache(indexSaveBitmap)
+            }
+        } else {
+            saveDrawBitmap = null
+        }
+    }
+
+    private fun drawBitmapCache(index: Int): Pair<Int, Bitmap> {
+        val bitmapCache = Bitmap.createBitmap(viewWidth, viewHeight, Bitmap.Config.ARGB_8888)
+        Canvas(bitmapCache).apply {
+            drawViewDraw(this, 0, index)
+        }
+        return Pair(index, bitmapCache)
     }
 
     @SuppressLint("DrawAllocation")
@@ -106,34 +176,100 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         canvas.clipRect(rectBorder)
         canvas.drawRect(rectBorder, paintBackground)
 
+        bitmapBackground?.let { bitmapBackground ->
+            canvas.drawBitmap(
+                bitmapBackground,
+                Rect(0, 0, bitmapBackground.width, bitmapBackground.height),
+                rectBorder,
+                paintBitmap
+            )
+        }
+        canvas.drawBackground()
+        canvas.drawGrid()
         //tao 1 layer moi len tren
         val layerId = canvas.saveLayer(rectBorder, paintBackground)
 
-        drawViewDraw(canvas)
+        drawViewDraw(canvas, startDraw, endDraw)
         canvas.restoreToCount(layerId)
         canvas.restore()
 
     }
 
-    private fun drawViewDraw(canvas: Canvas) {
-        dataDraw.forEachIndexed { index, data ->
-            when(data){
-                is DrawPathModel->{
-                    getListPathByData(data)?.onDraw(canvas)
-                }
-                is DrawStickerModel->{
-                    getListStickerByData(data)?.onDraw(canvas)
+    private fun Canvas.drawBackground(){
+        bitmapBackground?.let { bitmapBackground ->
+            this.drawBitmap(
+                bitmapBackground,
+                Rect(0, 0, bitmapBackground.width, bitmapBackground.height),
+                rectBorder,
+                paintBitmap
+            )
+        }
+    }
+
+    private fun Canvas.drawGrid() {
+
+        for (i in 0..numberOfColumnCells) {
+            this.drawLine(
+                i * (viewWidth / numberOfColumnCells).toFloat(),
+                0f,
+                i * (viewWidth / numberOfColumnCells).toFloat(),
+                viewHeight.toFloat(),
+                paintGrid
+            )
+        }
+        val draw = viewHeight / (viewHeight / numberOfColumnCells)
+
+        for (i in 0..draw) {
+            this.drawLine(
+                0f,
+                i * (viewHeight / draw).toFloat(),
+                viewWidth.toFloat(),
+                i * (viewHeight / draw).toFloat(),
+
+                paintGrid
+            )
+        }
+    }
+
+    fun drawViewDraw(canvas: Canvas, startDraw: Int, endDraw: Int) {
+
+        saveDrawBitmap?.let { lastBitmap ->
+            canvas.drawBitmap(
+                lastBitmap.second,
+                Rect(0, 0, lastBitmap.second.width, lastBitmap.second.height),
+                rectBorder,
+                paintBitmap
+            )
+        }
+
+        if (dataDraw.isNotEmpty()) {
+            for (index in startDraw..endDraw) {
+                val data = dataDraw[index]
+                when (data) {
+                    is DrawPathModel -> {
+                        getListPathByData(data)?.onDraw(canvas)
+                    }
+
+                    is DrawStickerModel -> {
+                        getListStickerByData(data)?.onDraw(canvas)
+                    }
+
+                    is DrawFillModel -> {
+                        getListFillByData(data)?.onDraw(canvas)
+                    }
+
+                    is DrawCubesModel -> {
+                        getListCubesByData(data)?.onDraw(canvas)
+                    }
                 }
 
-                is DrawFillModel->{
-                    getListFillByData(data)?.onDraw(canvas)
-                }
             }
         }
-        Log.d("3223223", "drawViewDraw: "+dataDraw.size)
+
 
         drawSticker?.onDraw(canvas)
         drawPath?.onDraw(canvas)
+        drawCubes?.onDraw(canvas)
     }
 
     override fun onTouch(event: MotionEvent) {
@@ -161,6 +297,8 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
                     ActionMode.POINTER_1 -> {
                         actionUpBrushErase()
                         actionUpSticker()
+                        actionUpCubes()
+                        actionUpFill(x, y)
                     }
 
                     ActionMode.POINTER_2 -> {
@@ -177,6 +315,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
                     ActionMode.POINTER_1 -> {
                         actionMoveBrushErase(x, y)
                         actionMoveSticker(x, y)
+                        actionMoveCubes(x, y)
                     }
 
                     ActionMode.POINTER_2 -> {
@@ -190,7 +329,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
             MotionEvent.ACTION_DOWN -> {
                 actionDownBrushErase()
                 actionDownSticker(x, y)
-                actionDownFill(x, y)
+                actionDownCubes(x, y)
                 downX = event.x
                 downY = event.y
 
@@ -201,12 +340,14 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         updateView.invoke()
     }
 
-    private fun actionDownFill(x: Float, y: Float) {
+    private fun actionUpFill(x: Float, y: Float) {
+        if (x < 0 || y < 0) return
+
         if (typeDraw == TypeDraw.FILL) {
             val currentBitmap: Bitmap =
                 Bitmap.createBitmap(viewWidth, viewHeight, Bitmap.Config.ARGB_8888)
             val canvasBitmap: Canvas = Canvas(currentBitmap)
-            drawViewDraw(canvasBitmap)
+            drawViewDraw(canvasBitmap, startDraw, endDraw)
 
             DrawFill(
                 context,
@@ -215,12 +356,14 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
                 viewHeight
             ).apply {
                 setFloodFill(x.toInt(), y.toInt(), Color.RED) {
-                    val drawFillModel= DrawFillModel(it.time, it.x, it.y, Color.RED)
+                    val drawFillModel = DrawFillModel(it.time, it.x, it.y, Color.RED)
                     dataDraw.add(drawFillModel)
                     listFill.add(this)
 
                     listUndo.add(drawFillModel)
                     listRedo.clear()
+
+                    updateBitmapCache()
                     updateAllFill()
                 }
             }
@@ -236,10 +379,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
 
                 midPoint = calculateMidPoint(event)
                 matrix.postScale(
-                    newDistance / oldDistance,
-                    newDistance / oldDistance,
-                    midPoint.x,
-                    midPoint.y
+                    newDistance / oldDistance, newDistance / oldDistance, midPoint.x, midPoint.y
                 )
             } else {
                 matrix.postTranslate(event.x - downX, event.y - downY)
@@ -256,8 +396,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
             if (rectAfter.width() < rectBorder.width()) {
                 val scale = rectBorder.width() / rectAfter.width()
                 matrix.postScale(
-                    scale, scale, midPoint.x,
-                    midPoint.y
+                    scale, scale, midPoint.x, midPoint.y
                 )
             }
 
@@ -268,11 +407,10 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
     private fun actionDownSticker(x: Float, y: Float) {
         if (typeDraw == TypeDraw.STICKER) {
             drawSticker = DrawSticker(
-                context,
-                currentSticker.copy(), {
-                    updateView.invoke()
-                }
-            )
+                context, currentSticker.copy()
+            ) {
+                updateView.invoke()
+            }
             drawSticker?.onActionDown(x, y)
         }
     }
@@ -281,6 +419,23 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         if (typeDraw == TypeDraw.BRUSH || typeDraw == TypeDraw.ERASE) {
             drawPath = DrawPath(currentPath.copy())
             drawPath?.onActionDown()
+        }
+    }
+
+    private fun actionDownCubes(x: Float, y: Float) {
+        if (typeDraw == TypeDraw.CUBES) {
+            drawCubes = DrawCubes(
+                data = DrawCubesModel(
+                    System.currentTimeMillis(),
+                    DrawPoint(0f, 0f),
+                    DrawPoint(0f, 0f),
+                    currentPath.size,
+                    currentPath.color,
+                    BrushType.BRUSH,
+                    typeCubes
+                )
+            )
+            drawCubes?.onActionDown(x, y)
         }
     }
 
@@ -296,6 +451,12 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         }
     }
 
+    private fun actionMoveCubes(x: Float, y: Float) {
+        if (typeDraw == TypeDraw.CUBES) {
+            drawCubes?.onActionMove(x, y)
+        }
+    }
+
     private fun actionUpBrushErase() {
         if (typeDraw == TypeDraw.BRUSH || typeDraw == TypeDraw.ERASE) {
             drawPath?.onActionUp {
@@ -305,6 +466,8 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
 
                 listUndo.add(it)
                 listRedo.clear()
+
+                updateBitmapCache()
                 updateAllPath()
             }
         }
@@ -319,7 +482,25 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
 
                 listUndo.add(it)
                 listRedo.clear()
+
+                updateBitmapCache()
                 updateAllSticker()
+            }
+        }
+    }
+
+    private fun actionUpCubes() {
+        if (typeDraw == TypeDraw.CUBES) {
+            drawCubes?.onActionUp() {
+                dataDraw.add(it)
+                listCubes.add(drawCubes!!)
+                drawCubes = null
+
+                listUndo.add(it)
+                listRedo.clear()
+
+                updateBitmapCache()
+                updateAllCubes()
             }
         }
     }
@@ -334,6 +515,8 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
             listRedo.add(data)
             dataDraw.remove(data)
         }
+        updateBitmapCache()
+
         updateView.invoke()
     }
 
@@ -344,6 +527,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
             listUndo.add(data)
             dataDraw.add(data)
         }
+        updateBitmapCache()
 
         updateView.invoke()
     }
@@ -396,6 +580,11 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         typeDraw = TypeDraw.FILL
     }
 
+    fun cubesType(typeCubes: TypeCubes) {
+        typeDraw = TypeDraw.CUBES
+        this.typeCubes = typeCubes
+    }
+
     private fun updateAllPath() {
         val listDrawNew: MutableList<DrawPath> = mutableListOf()
 
@@ -427,7 +616,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
                     val currentBitmap: Bitmap =
                         Bitmap.createBitmap(viewWidth, viewHeight, Bitmap.Config.ARGB_8888)
                     val canvasBitmap: Canvas = Canvas(currentBitmap)
-                    drawViewDraw(canvasBitmap)
+                    drawViewDraw(canvasBitmap, startDraw, endDraw)
 
                     val drawFill = DrawFill(
                         context,
@@ -473,6 +662,25 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
 
     }
 
+    private fun updateAllCubes() {
+        val listDrawNew: MutableList<DrawCubes> = mutableListOf()
+
+        dataDraw.forEach {
+            if (it is DrawCubesModel) {
+                var cubes = getListCubesByData(it)
+                if (cubes == null) {
+                    cubes = DrawCubes(it)
+                }
+                listDrawNew.add(cubes)
+            }
+        }
+        listCubes.clear()
+        listCubes.addAll(listDrawNew)
+
+        updateView.invoke()
+
+    }
+
     private fun getListPathByData(drawPath: DrawPathModel): DrawPath? {
         listPath.forEach {
             if (it.data.time == drawPath.time) {
@@ -486,6 +694,16 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
     private fun getListStickerByData(drawSticker: DrawStickerModel): DrawSticker? {
         listSticker.forEach {
             if (it.data.time == drawSticker.time) {
+                return it
+            }
+        }
+
+        return null
+    }
+
+    private fun getListCubesByData(drawCubesModel: DrawCubesModel): DrawCubes? {
+        listCubes.forEach {
+            if (it.data.time == drawCubesModel.time) {
                 return it
             }
         }

@@ -43,18 +43,17 @@ class DrawSticker(
 
 
     private fun loadImage() {
-        CoroutineScope(Dispatchers.IO).launch {
-            bitmap = Glide.with(context).asBitmap().load(data.path).submit().get()
 
-            bitmap?.let {
-                rectScr.set(0, 0, it.width, it.height)
-            }
+        bitmap = Glide.with(context).asBitmap().load(data.path).submit().get()
+
+        bitmap?.let {
+            rectScr.set(0, 0, it.width, it.height)
         }
+
     }
 
     fun onDraw(canvas: Canvas) {
         bitmap?.let {
-            Log.d("HIUIUIUIUIU", "onDraw: ")
             canvas.drawBitmap(it, rectScr, rectDst, paintBitmap)
         }
     }

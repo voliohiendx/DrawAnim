@@ -1,4 +1,4 @@
-package com.volio.draw.model
+package com.volio.draw.model.data
 
 import android.graphics.Bitmap
 import com.volio.draw.model.DataDraw
