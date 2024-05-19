@@ -29,4 +29,9 @@ interface DrawCanvas {
     fun zoomIn()
 
     fun zoomOut()
+
+    fun showGrid(isShow: Boolean)
+
+    fun setStickers(path: String)
+
 }

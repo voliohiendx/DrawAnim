@@ -88,9 +88,38 @@
                     android:textColor="@color/white" />
 
                 <TextView
+                    android:id="@+id/tvShowGrid"
                     android:layout_width="0dp"
                     android:layout_height="@dimen/_40sdp"
+                    android:text="Show Grid"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textColor="@color/white" />
+            </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_50sdp">
+
+                <TextView
+                    android:id="@+id/tvAddSticker"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_40sdp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Add Sticker"
+                    android:textColor="@color/white" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_40sdp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textColor="@color/white" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/_40sdp"
                     android:layout_weight="1"
                     android:gravity="center"
                     android:textColor="@color/white" />

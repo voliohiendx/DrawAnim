@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
+import android.icu.text.CaseMap.Fold
 import android.util.Log
 import com.volio.draw.QueueLinearFloodFiller
 import com.volio.draw.model.data.FillDrawData
@@ -12,8 +13,8 @@ import com.volio.draw.model.data.FillDrawData
 class DrawFill(
     private val context: Context,
     var data: FillDrawData,
-    private val with: Int,
-    private val height: Int
+    private val with: Float,
+    private val height: Float
 ) {
     private var rectScr: Rect = Rect()
     private var rectDst: RectF = RectF()
@@ -25,7 +26,7 @@ class DrawFill(
 
     init {
         rectScr.set(0, 0, data.bitmap.width, data.bitmap.height)
-        rectDst = RectF(0f, 0f, with.toFloat(), height.toFloat())
+        rectDst = RectF(0f, 0f, with, height)
 
         queueLinearFloodFiller.setDataImage(data.bitmap)
     }

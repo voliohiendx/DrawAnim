@@ -7,16 +7,18 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import com.volio.draw.model.DataDraw
+import com.volio.draw.model.FrameModel
 import com.volio.draw.model.TypeCubes
 import com.volio.draw.model.TypeDraw
 
 
 class DrawView @JvmOverloads constructor(
-    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
     init {
         setLayerType(LAYER_TYPE_HARDWARE, null)
+        // set ratio o day nha
     }
 
 
@@ -35,7 +37,6 @@ class DrawView @JvmOverloads constructor(
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
-        drawPath.setViewSize(width, height)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -51,8 +52,9 @@ class DrawView @JvmOverloads constructor(
         drawPath.setTypeDraw(typeDraw)
     }
 
-    fun setData(dataDraw: List<DataDraw>) {
-        drawPath.setData(dataDraw)
+    fun setData(frameModel: FrameModel, ratio: Float, pathBackground: String) {
+        val widthView = (width * 0.8f)
+        drawPath.setData(frameModel, pathBackground, widthView, widthView * ratio)
     }
 
     fun setBrushSize(size: Float) {
@@ -63,7 +65,6 @@ class DrawView @JvmOverloads constructor(
         drawPath.setColorPath(color)
     }
 
-    fun getDataDraw(): List<DataDraw> = drawPath.getDataDraw()
 
     fun isActiveUndo(): Boolean {
         return drawPath.isActiveUndo()
@@ -98,8 +99,16 @@ class DrawView @JvmOverloads constructor(
         drawPath.cubesType(typeCubes)
     }
 
-    fun setBackgroundBitmap(path: String) {
-        drawPath.setBackground(path)
+//    fun setBackgroundBitmap(path: String) {
+//        drawPath.setBackground(path)
+//    }
+
+    fun showGrid(show: Boolean) {
+        drawPath.showGrid(show)
+    }
+
+    fun setStickers(path: String) {
+        drawPath.setStickers(path)
     }
 
 

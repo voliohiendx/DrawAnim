@@ -29,6 +29,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.truncate
 import kotlin.random.Random
 
 @AndroidEntryPoint
@@ -36,6 +37,7 @@ class SplashFragment : BaseFragment<FragmentSplashBinding, SplashNavigation>() {
 
     val viewModel: SplashViewModel by viewModels()
     override val navigation = SplashNavigation(this)
+    var isShowGrid = true
 
     override fun getLayoutId() = R.layout.fragment_splash
 
@@ -61,14 +63,14 @@ class SplashFragment : BaseFragment<FragmentSplashBinding, SplashNavigation>() {
         }
 
         binding.tvGetData.setPreventDoubleClick {
-            MMKV.defaultMMKV()
-                .encode(MMKVKey.DATA_DRAW, FrameModel(binding.drawView.getDataDraw()))
+//            MMKV.defaultMMKV()
+//                    .encode(MMKVKey.DATA_DRAW, FrameModel(binding.drawView.getDataDraw()))
         }
 
         binding.tvSetData.setPreventDoubleClick {
-            MMKV.defaultMMKV().decodeParcelable(MMKVKey.DATA_DRAW, FrameModel::class.java)?.let {
-                binding.drawView.setData(it.data)
-            }
+//            MMKV.defaultMMKV().decodeParcelable(MMKVKey.DATA_DRAW, FrameModel::class.java)?.let {
+//                binding.drawView.setData(it.data)
+//            }
         }
 
         binding.tvColor.setPreventDoubleClick {
@@ -114,75 +116,57 @@ class SplashFragment : BaseFragment<FragmentSplashBinding, SplashNavigation>() {
         binding.tvAddFrame.setPreventDoubleClick {
             CoroutineScope(Dispatchers.IO).launch {
                 val data = mutableListOf<FrameModel>()
-                MMKV.defaultMMKV().decodeParcelable(MMKVKey.DATA_PROJECT, ProjectModel::class.java)
-                    ?.let {
-                        data.addAll(it.frames)
-                    }
-
-                data.add(FrameModel(binding.drawView.getDataDraw()))
-
-                MMKV.defaultMMKV().encode(MMKVKey.DATA_PROJECT, ProjectModel(data))
+//                MMKV.defaultMMKV().decodeParcelable(MMKVKey.DATA_PROJECT, ProjectModel::class.java)
+//                        ?.let {
+//                            data.addAll(it.frames)
+//                        }
+//
+//                data.add(FrameModel(binding.drawView.getDataDraw()))
+//
+//                MMKV.defaultMMKV().encode(MMKVKey.DATA_PROJECT, ProjectModel(data))data
             }
         }
 
         binding.tvShowRandom.setPreventDoubleClick {
-            MMKV.defaultMMKV().decodeParcelable(MMKVKey.DATA_PROJECT, ProjectModel::class.java)
-                ?.let {
-                    val data = it.frames.random()
-                    binding.drawView.setData(data.data)
-                }
+           // val projectModel= ProjectModel(name = "HHIII", )
+//            MMKV.defaultMMKV().decodeParcelable(MMKVKey.DATA_PROJECT, ProjectModel::class.java)
+//                    ?.let {
+//                        val data = it.frames.random()
+//                        binding.drawView.setData(data,1f)
+//                    }
         }
 
         binding.tvPlay.setPreventDoubleClick {
-            MMKV.defaultMMKV().decodeParcelable(MMKVKey.DATA_PROJECT, ProjectModel::class.java)
-                ?.let {
-                    var check = 0
-                    CoroutineScope(Dispatchers.IO).launch {
-                        while (check < it.frames.size) {
-                            withContext(Dispatchers.Main) {
-                                binding.drawView.setData(it.frames[check].data)
-                            }
-                            check++
-                            kotlinx.coroutines.delay(125L)
-
-                            if (check == it.frames.size) check = 0
-                        }
-                    }
-                }
+//            MMKV.defaultMMKV().decodeParcelable(MMKVKey.DATA_PROJECT, ProjectModel::class.java)
+//                    ?.let {
+//                        var check = 0
+//                        CoroutineScope(Dispatchers.IO).launch {
+//                            while (check < it.frames.size) {
+//                                withContext(Dispatchers.Main) {
+//                                    binding.drawView.setData(it.frames[check], 1f)
+//                                }
+//                                check++
+//                                kotlinx.coroutines.delay(125L)
+//
+//                                if (check == it.frames.size) check = 0
+//                            }
+//                        }
+//                    }
         }
 
-        binding.tvExport.setPreventDoubleClick {
-            MMKV.defaultMMKV().decodeParcelable(MMKVKey.DATA_PROJECT, ProjectModel::class.java)
-                ?.let {
-                    it.frames.forEachIndexed { index, data ->
-                        CoroutineScope(Dispatchers.IO).launch {
-                            val viewWidth = (getScreenWidth() * 0.8).toInt()
-                            val viewHeight = viewWidth
-                            val drawLayout = DrawLayout(requireContext()) {}
+//        binding.tvBackground.setPreventDoubleClick {
+//            binding.drawView.setBackgroundBitmap("https://c4.wallpaperflare.com/wallpaper/383/217/191/abstract-pattern-mosaic-design-wallpaper-preview.jpg")
+//        }
 
-                            drawLayout.setViewSize(viewWidth, viewHeight)
-                            drawLayout.setData(data.data)
-                            val bitmapCache =
-                                Bitmap.createBitmap(viewWidth, viewHeight, Bitmap.Config.ARGB_8888)
-
-                            Canvas(bitmapCache).apply {
-                                drawLayout.drawViewDraw(this, 0, data.data.size - 1)
-                            }
-                            bitmapCache.saveBitmapToInternalStorage(
-                                requireContext(),
-                                "${index}.png"
-                            )
-                        }
-                    }
-
-                }
+        binding.tvShowGrid.setPreventDoubleClick {
+            isShowGrid = !isShowGrid
+            binding.drawView.showGrid(isShowGrid)
         }
 
-        binding.tvBackground.setPreventDoubleClick {
-            binding.drawView.setBackgroundBitmap("https://c4.wallpaperflare.com/wallpaper/383/217/191/abstract-pattern-mosaic-design-wallpaper-preview.jpg")
+        binding.tvAddSticker.setPreventDoubleClick {
+            binding.drawView.setStickers("https://tomaudep.com/wp-content/uploads/2023/08/hinh-to-mau-khung-long.jpg")
         }
-
-
+        
         //   binding.imgTest.loadImage(bitmap = queueLinearFloodFiller.image)
 
     }
@@ -192,42 +176,4 @@ class SplashFragment : BaseFragment<FragmentSplashBinding, SplashNavigation>() {
         return Color.argb(255, Random.nextInt(256), Random.nextInt(256), Random.nextInt(256))
     }
 
-    fun minPointX(image: Bitmap, node: Point, targetColor: Int, replacementColor: Int) {
-        val listPoint = mutableListOf<Point>()
-        var pointOrigin = Point(0, 0)
-        var pointCurrent = Point(0, 0)
-        var x = node.x
-        var y = node.y
-
-        var isDown = true
-        var isLeft = true
-
-        while (x > 0 && image.getPixel(x - 1, y) == targetColor) {
-            x--
-        }
-        pointOrigin = Point(x, y)
-        listPoint.add(pointOrigin)
-
-        while (pointCurrent != pointOrigin) {
-            if (isDown) {
-                if (image.getPixel(x, y + 1) == targetColor) {
-                    if (isLeft) {
-                        while (x > 0 && image.getPixel(x - 1, y) == targetColor) {
-                            x--
-                        }
-                        pointCurrent = Point(x, y)
-                        listPoint.add(pointCurrent)
-                    } else {
-
-                    }
-                } else {
-                    isDown = false
-                }
-            }
-
-
-        }
-
-
-    }
 }
