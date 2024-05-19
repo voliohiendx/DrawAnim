@@ -22,6 +22,7 @@ import com.volio.vn.b1_project.databinding.FragmentSplashBinding
 import com.volio.vn.b1_project.ui.loadImage
 import com.volio.vn.b1_project.utils.MMKVKey
 import com.volio.vn.common.utils.delay
+import com.volio.vn.common.utils.getScreenHeight
 import com.volio.vn.common.utils.getScreenWidth
 import com.volio.vn.common.utils.setPreventDoubleClick
 import dagger.hilt.android.AndroidEntryPoint
@@ -51,6 +52,8 @@ class SplashFragment : BaseFragment<FragmentSplashBinding, SplashNavigation>() {
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onViewReady() {
+        binding.drawView.setData(FrameModel(), "", getScreenWidth().toFloat(), getScreenHeight().toFloat(), 1f)
+
 
         binding.tvSticker.setPreventDoubleClick {
             binding.drawView.setTypeDraw(TypeDraw.STICKER)
@@ -128,7 +131,7 @@ class SplashFragment : BaseFragment<FragmentSplashBinding, SplashNavigation>() {
         }
 
         binding.tvShowRandom.setPreventDoubleClick {
-           // val projectModel= ProjectModel(name = "HHIII", )
+            // val projectModel= ProjectModel(name = "HHIII", )
 //            MMKV.defaultMMKV().decodeParcelable(MMKVKey.DATA_PROJECT, ProjectModel::class.java)
 //                    ?.let {
 //                        val data = it.frames.random()
@@ -166,7 +169,7 @@ class SplashFragment : BaseFragment<FragmentSplashBinding, SplashNavigation>() {
         binding.tvAddSticker.setPreventDoubleClick {
             binding.drawView.setStickers("https://tomaudep.com/wp-content/uploads/2023/08/hinh-to-mau-khung-long.jpg")
         }
-        
+
         //   binding.imgTest.loadImage(bitmap = queueLinearFloodFiller.image)
 
     }

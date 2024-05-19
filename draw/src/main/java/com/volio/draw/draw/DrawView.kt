@@ -52,9 +52,8 @@ class DrawView @JvmOverloads constructor(
         drawPath.setTypeDraw(typeDraw)
     }
 
-    fun setData(frameModel: FrameModel, ratio: Float, pathBackground: String) {
-        val widthView = (width * 0.8f)
-        drawPath.setData(frameModel, pathBackground, widthView, widthView * ratio)
+    fun setData(frameModel: FrameModel, pathBackground: String, width: Float, height: Float, ratio: Float) {
+        drawPath.setData(frameModel, pathBackground, width, height, ratio)
     }
 
     fun setBrushSize(size: Float) {

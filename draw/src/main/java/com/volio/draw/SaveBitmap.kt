@@ -1,6 +1,7 @@
 package com.volio.draw
 
 import android.content.Context
+import android.content.res.Resources
 import android.graphics.Bitmap
 import com.volio.draw.draw.DrawLayout
 import com.volio.draw.model.DataDraw
@@ -18,7 +19,7 @@ fun saveFrame(context: Context, projectModel: ProjectModel, frameModel: FrameMod
     CoroutineScope(Dispatchers.IO).launch {
         val drawLayout = DrawLayout(context) {}
 
-        drawLayout.setData(frameModel, projectModel.background, projectModel.width, projectModel.height)
+        drawLayout.setData(frameModel, projectModel.background, getScreenWidth().toFloat(), getScreenHeight().toFloat(), projectModel.width / projectModel.height)
         val bitmapCache =
                 Bitmap.createBitmap(projectModel.width.toInt(), projectModel.height.toInt(), Bitmap.Config.ARGB_8888)
 
@@ -26,7 +27,6 @@ fun saveFrame(context: Context, projectModel: ProjectModel, frameModel: FrameMod
                 context,
                 "${frameModel.id}.png"
         )
-
     }
 
 }
@@ -55,6 +55,15 @@ fun getDirTemp(context: Context): File {
         dir.mkdirs()
     }
     return dir
+}
+
+fun getScreenWidth(): Int {
+    return Resources.getSystem().displayMetrics.widthPixels
+}
+
+
+fun getScreenHeight(): Int {
+    return Resources.getSystem().displayMetrics.heightPixels
 }
 
 // save anh bitmap khi chuyen giua cac frame khac nhau, se có id, thoi gian chỉnh sửa.

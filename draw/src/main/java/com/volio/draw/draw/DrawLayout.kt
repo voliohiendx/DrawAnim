@@ -99,8 +99,8 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
 
     private var drawSticker: DrawSticker? = DrawSticker(context, currentSticker, {})
 
-    fun setData(data: FrameModel, pathBackground: String, width: Float, height: Float) {
-        setViewSize(width, height)
+    fun setData(data: FrameModel, pathBackground: String, width: Float, height: Float, ratio: Float) {
+        setViewSize(width, height, ratio)
 
         frameData = data
         saveDrawBitmap = null
@@ -118,9 +118,9 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
 
     fun getDataDraw(): FrameModel? = frameData
 
-    fun setViewSize(width: Float, height: Float) {
-        viewWidth = width
-        viewHeight = height
+    fun setViewSize(width: Float, height: Float, ratio: Float) {
+        viewWidth = width * 0.8f
+        viewHeight = viewWidth * ratio
 
         rectBorder = RectF(0f, 0f, viewWidth, viewHeight)
 
@@ -134,9 +134,11 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
 
     fun setBackground(path: String) {
         CoroutineScope(Dispatchers.IO).launch {
-            bitmapBackground = Glide.with(context).asBitmap().load(path).submit().get()
-            withContext(Dispatchers.Main) {
-                updateView.invoke()
+            runCatching {
+                bitmapBackground = Glide.with(context).asBitmap().load(path).submit().get()
+                withContext(Dispatchers.Main) {
+                    updateView.invoke()
+                }
             }
         }
     }
@@ -333,6 +335,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
                 setFloodFill(x.toInt(), y.toInt(), currentPath.color) {
                     val drawFillModel = DrawFillModel(it.time, it.x, it.y, currentPath.color)
                     frameData?.data?.add(drawFillModel)
+                    frameData?.lastTimeEdit = System.currentTimeMillis()
                     listFill.add(this)
 
                     listUndo.add(drawFillModel)
@@ -420,6 +423,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         if (typeDraw == TypeDraw.BRUSH || typeDraw == TypeDraw.ERASE) {
             drawPath?.onActionUp {
                 frameData?.data?.add(it)
+                frameData?.lastTimeEdit = System.currentTimeMillis()
                 listPath.add(drawPath!!)
                 drawPath = null
 
@@ -436,6 +440,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         if (typeDraw == TypeDraw.STICKER) {
             drawSticker?.onActionUp() {
                 frameData?.data?.add(it)
+                frameData?.lastTimeEdit = System.currentTimeMillis()
                 listSticker.add(drawSticker!!)
                 drawSticker = null
 
@@ -452,6 +457,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         if (typeDraw == TypeDraw.CUBES) {
             drawCubes?.onActionUp() {
                 frameData?.data?.add(it)
+                frameData?.lastTimeEdit = System.currentTimeMillis()
                 listCubes.add(drawCubes!!)
                 drawCubes = null
 
@@ -473,6 +479,7 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         if (data != null) {
             listRedo.add(data)
             frameData?.data?.remove(data)
+            frameData?.lastTimeEdit = System.currentTimeMillis()
         }
         updateBitmapCache()
 
@@ -485,6 +492,8 @@ class DrawLayout(val context: Context, private val updateView: () -> Unit) : Dra
         if (data != null) {
             listUndo.add(data)
             frameData?.data?.add(data)
+            frameData?.lastTimeEdit = System.currentTimeMillis()
+
         }
         updateBitmapCache()
 
